@@ -1,0 +1,74 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: demo-custom-metrics
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: demo-custom-metrics
+  name: demo-custom-metrics
+  namespace: demo-custom-metrics
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: demo-custom-metrics
+  template:
+    metadata:
+      labels:
+        app: demo-custom-metrics
+    spec:
+      containers:
+      - image: quay.io/rhn_support_stripura/py-flask-metrics-app:0.6
+        imagePullPolicy: IfNotPresent
+        name: demo-custom-metrics
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: demo-custom-metrics
+  name: demo-custom-metrics
+  namespace: demo-custom-metrics
+spec:
+  ports:
+  - port: 8080
+    protocol: TCP
+    targetPort: 8080
+    name: web
+  selector:
+    app: demo-custom-metrics
+  type: ClusterIP
+---
+kind: Route
+apiVersion: route.openshift.io/v1
+metadata:
+  name: demo-custom-metrics
+  namespace: demo-custom-metrics
+  labels:
+    app: demo-custom-metrics
+spec:
+  to:
+    kind: Service
+    name: demo-custom-metrics
+  tls: null
+  port:
+    targetPort: web
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  labels:
+    app: demo-custom-metrics
+  name: demo-custom-metrics
+  namespace: demo-custom-metrics
+spec:
+  endpoints:
+  - interval: 30s
+    port: web
+    scheme: http
+  selector:
+    matchLabels:
+      app: demo-custom-metrics
