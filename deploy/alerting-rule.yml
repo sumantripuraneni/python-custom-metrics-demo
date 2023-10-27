@@ -1,0 +1,11 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: demo-custom-metrics-alert
+  namespace: demo-custom-metrics
+spec:
+  groups:
+  - name: demo-custom-metrics
+    rules:
+    - alert: httpAlert
+      expr: http_request_total >= 10
